@@ -3,9 +3,7 @@
 #include "RGB_to_IR.h"
 #include "frequency_utilities.h"
 
-/* Debugging */
-#define DEBUG_ENABLED 1
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_FREQ
 #include "serialFreqDisplay.h" //Only for frequency debugging
 #endif
 
@@ -20,7 +18,7 @@ bool lamp_state = false;
 RGB_to_IR ir_sender;
 
 /* Audio signal spectrum display */
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_FREQ
 SerialFreqDisplay displ(THRESHOLD, NSAMPLES/2);
 #endif
 
@@ -30,7 +28,7 @@ FrequencyUtilities FreqUtilities;
 /* Setup */
 void setup() {
 
-#if 1
+#if DEBUG_TRACES_GENERAL
   Serial.begin(115200);
 #endif
  
@@ -43,6 +41,7 @@ void setup() {
   /* LED */
   pinMode(LED_PIN, OUTPUT);
 
+  /* Startup effect */
   set_led(true);
   delay(500);
   set_led(false);
@@ -66,8 +65,8 @@ void set_led(bool state)
   else digitalWrite(LED_PIN, LOW);
 }
 
-/* Node-specific logic */
-void node_logic()
+/* Device-specific logic */
+void device_logic()
 {
   /* Process double clap detected */
   if(doubleclap_detected)
@@ -107,7 +106,7 @@ void clap_detection_sm()
   /* In case a clap is detected */
   if(clap)
   {
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_GENERAL
     Serial.print("Time since last clap: ");
     Serial.println(time_since_clap);
 #endif
@@ -117,7 +116,7 @@ void clap_detection_sm()
     {
       //First clap detected!
       clap_number = 1;
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_GENERAL
       Serial.println("First clap detected");
 #endif
     }
@@ -131,7 +130,7 @@ void clap_detection_sm()
         if( (time_since_clap > 80) && (time_since_clap < 600) )
         {
           clap_number = 2;
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_GENERAL
           Serial.println("Second clap detected");
 #endif
         }
@@ -143,7 +142,7 @@ void clap_detection_sm()
         if( (time_since_clap > 150) && (time_since_clap < 600) )
         {
           clap_number++;
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_GENERAL
           Serial.println("Further claps detected");
 #endif
         }
@@ -159,7 +158,7 @@ void clap_detection_sm()
     //If we already counted two claps and no further claps are detected in one second, sequence complete
     if( (clap_number == 2) && (time_since_clap > 1000) )
     {
-#if DEBUG_ENABLED
+#if DEBUG_TRACES_GENERAL
       Serial.println("Order detected!!");
 #endif
       clap_number = 0;
@@ -175,7 +174,5 @@ void loop() {
 
   /* Clap detection state machine */
   clap_detection_sm();
-  node_logic();
-
-  //delay(100);
+  device_logic();
 }

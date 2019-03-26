@@ -21,7 +21,6 @@ private:
   uint8_t dominant_frequency;
   uint16_t max_level_historic;
   uint16_t iterations_count;
-  unsigned int sampling_period_us;
 
   arduinoFFT FFT = arduinoFFT();
 

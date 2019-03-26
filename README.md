@@ -7,8 +7,8 @@ This can be used with almost any lamp that is controlled by a IR remote control,
 A clap is detected if the following conditions are met:
 The trigger for a lamp state switch (double clap) is considered to be detected if the following conditions are met:
 1. A first clap is detected after a period of more than 1 second without detecting any clap.
-2. A second clap is detected in a period of [80-400] milliseconds after the first clap.
-3. No third clap is detected in a period of [80-800] milliseconds after the second clap.
+2. A second clap is detected in a period of [80-600] milliseconds after the first clap.
+3. No third clap is detected in a period of [80-1000] milliseconds after the second clap.
 
 # The hardware
 For this project you will need at least:
@@ -51,4 +51,4 @@ If not, the best way to figure out what protocol and commands you lamp respond t
 
 # The case
 One it is functionally working, you will realize the whole thing is quite ugly to just let it stay like that.
-Therefore I designed a basic case that can be 3D printed and that will hide all this ugliness. 
+Therefore I designed a basic case that can be 3D printed and that will hide all this ugliness.

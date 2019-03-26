@@ -14,7 +14,6 @@ void FrequencyUtilities::begin(HardwareSerial* hwPrint)
   max_level_historic = 0;
   max_level_freq_historic = 0;
   iterations_count = 0;
-  sampling_period_us = round(1000000 * (1.0 / SAMPLING_FREQUENCY));
 
 }
 
@@ -34,7 +33,6 @@ void FrequencyUtilities::take_samples()
     //data[i] = val/4 - 128;
     data[i] = val;
     im[i] = 0;
-    while (micros() < (newTime + sampling_period_us)) { /* do nothing to wait */ }
   }
 
   max_level_actual = maxVal; 
@@ -53,7 +51,6 @@ void FrequencyUtilities::take_samples()
 
 void FrequencyUtilities::time_to_freq()
 {
-  //fix_fft(data, im, 7, 0);
    FFT.Windowing(data, NSAMPLES, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
    FFT.Compute(data, im, NSAMPLES, FFT_FORWARD);
    FFT.ComplexToMagnitude(data, im, NSAMPLES);
@@ -92,7 +89,7 @@ bool FrequencyUtilities::clap_detected()
   if(max_level_actual > SOUND_THRESHOLD)
   {  
     //Check if the sound max frequency  is in the frequency of the clap
-    if( (dominant_frequency > NSAMPLES/10) && (dominant_frequency < (5*NSAMPLES)/6))
+    if( (dominant_frequency > MIN_FREQ) && (dominant_frequency < MAX_FREQ))
     {
       m_hwPrint->println("Clap detected!");
       return true;
