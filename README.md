@@ -52,4 +52,3 @@ If not, the best way to figure out what protocol and commands you lamp respond t
 # The case
 One it is functionally working, you will realize the whole thing is quite ugly to just let it stay like that.
 Therefore I designed a basic case that can be 3D printed and that will hide all this ugliness.
-![Alt text](3D_Model/clap_lamp_top.stl)
