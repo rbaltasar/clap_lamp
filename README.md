@@ -1,14 +1,26 @@
 # Clap lamp project
-This project is about a device able to switch ON and OFF a light just by clapping twice.
+This project is about a device able to control a LED light by clapping:
+* Two claps for switch ON/OFF
+* Three claps for color change
+
 This can be used with almost any lamp that is controlled by a IR remote control, as long as:
 * You know the IR commands for ON and OFF.
 * You know which IR protocol is used, and this protocol is supported by the Arduino-IRremote library.
 
 A clap is detected if the following conditions are met:
-The trigger for a lamp state switch (double clap) is considered to be detected if the following conditions are met:
+* The measured sound level is higher than a defined threshold.
+* The measured sound's most dominant frequency lies within a defined frequency range.
+Below is explained how to tune these two parameters.
+
+A sequence of claps is considered to be detected if the following conditions are met:
 1. A first clap is detected after a period of more than 1 second without detecting any clap.
-2. A second clap is detected in a period of [80-600] milliseconds after the first clap.
-3. No third clap is detected in a period of [80-1000] milliseconds after the second clap.
+2. Further claps are detected within a period of [80-400] milliseconds after the previous clap.
+3. No clap is detected in a period of [160-400] milliseconds after the previous clap.
+
+Depending on the number of detected claps in the sequence:
+* If 2: an ON/OFF command (depending on the current state of the lamp) will be issued.
+* If 3: a change color command will be issued.
+* If > 3: the sequence will be ignored.
 
 # The hardware
 For this project you will need at least:
@@ -51,4 +63,4 @@ If not, the best way to figure out what protocol and commands you lamp respond t
 
 # The case
 One it is functionally working, you will realize the whole thing is quite ugly to just let it stay like that.
-Therefore I designed a basic case that can be 3D printed and that will hide all this ugliness.
+Therefore I designed a basic case that can be 3D printed and that will hide all this ugliness. The 3D model can also be found in this repository.
