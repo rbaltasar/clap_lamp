@@ -2,17 +2,11 @@
 /* Includes */
 #include "RGB_to_IR.h"
 #include "frequency_utilities.h"
+#include "clapDetection.h"
 
 #if DEBUG_TRACES_FREQ
 #include "serialFreqDisplay.h" //Only for frequency debugging
 #endif
-
-/* Clap detection variables */
-unsigned long last_clap = 0;
-uint8_t clap_number = 0;
-unsigned long time_since_clap = 0;
-bool doubleclap_detected = false;
-bool lamp_state = false;
 
 /* IR utilities */
 RGB_to_IR ir_sender;
@@ -24,6 +18,13 @@ SerialFreqDisplay displ(THRESHOLD, NSAMPLES/2);
 
 /* Audio signal analyzer */
 FrequencyUtilities FreqUtilities;
+
+/* Clap detection features */
+clapDetection clap_detector(&FreqUtilities);
+
+/* Clap detection variables */
+uint8_t next_color_idx = 0;
+bool lamp_state = false;
 
 /* Setup */
 void setup() {
@@ -68,8 +69,9 @@ void set_led(bool state)
 /* Device-specific logic */
 void device_logic()
 {
-  /* Process double clap detected */
-  if(doubleclap_detected)
+ 
+  /* Process double clap detected --> Switch ON/OFF */
+  if(clap_detector.getDetectionType() == DOUBLE_CLAP)
   {
     if(lamp_state)
     {
@@ -87,92 +89,29 @@ void device_logic()
       delay(1000);
       set_led(false);
     } 
+    clap_detector.resetDetectionType();
+  } 
 
-    doubleclap_detected = false;
-  }  
+  /* Process triple clap detected --> Change color */
+  else if(clap_detector.getDetectionType() == TRIPLE_CLAP)
+  {   
+    ir_sender.send_ir_colorIdx(next_color_idx++);
+    next_color_idx >= NUM_IR_COLORS ? next_color_idx = 0 : next_color_idx = next_color_idx;
+    clap_detector.resetDetectionType();
+    int i=0;
+    while(i<10)
+    {
+      set_led(true);
+      delay(100);
+      set_led(false);
+      delay(100);
+      i++;
+    } 
+  }
 }
 
-/* State machine to handle the clap detection asynchronously */
-void clap_detection_sm()
-{
-  unsigned long current_time = millis();
-  //Time since last clap detected
-  time_since_clap = current_time - last_clap;
-
-  //Detection of a clap in the current iteration
-  //This includes signal sampling, FFT and spectrum analysis
-  bool clap = FreqUtilities.detect_single_clap();
-
-  /* In case a clap is detected */
-  if(clap)
-  {
-#if DEBUG_TRACES_GENERAL
-    Serial.print("Time since last clap: ");
-    Serial.println(time_since_clap);
-#endif
-
-    //Last clap happened long time ago, the detected clap is the first of the sequence
-    if( (time_since_clap > 2000) )
-    {
-      //First clap detected!
-      clap_number = 1;
-#if DEBUG_TRACES_GENERAL
-      Serial.println("First clap detected");
-#endif
-    }
-    //A clap happened "recently"
-    else
-    {
-      //A clap has already been detected before
-      if(clap_number == 1)
-      {
-        //If the timing is right, this is the second clap of the sequence
-        if( (time_since_clap > 80) && (time_since_clap < 600) )
-        {
-          clap_number = 2;
-#if DEBUG_TRACES_GENERAL
-          Serial.println("Second clap detected");
-#endif
-        }
-      }
-      //More than one clap have been detected before
-      else if(clap_number > 1)
-      {
-        //If the timing is right, this is just another clap in a large sequence of claps
-        if( (time_since_clap > 150) && (time_since_clap < 600) )
-        {
-          clap_number++;
-#if DEBUG_TRACES_GENERAL
-          Serial.println("Further claps detected");
-#endif
-        }
-      }
-    }
-    //Save the timestamp of the clap
-    last_clap = millis();
-  }
-
-  /* No clap detected */
-  else
-  {
-    //If we already counted two claps and no further claps are detected in one second, sequence complete
-    if( (clap_number == 2) && (time_since_clap > 1000) )
-    {
-#if DEBUG_TRACES_GENERAL
-      Serial.println("Order detected!!");
-#endif
-      clap_number = 0;
-      doubleclap_detected = true;     
-    }
-  }
-
-  current_time = millis() - current_time;
-
-}
-
-void loop() { 
-
-  /* Clap detection state machine */
-  clap_detection_sm();
-  device_logic();
+void loop() 
+{ 
+  /* Feed the clap detector algorithm. Apply logic if anything detected */
+  if(clap_detector.feed()) device_logic();
 }

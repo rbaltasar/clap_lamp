@@ -29,3 +29,10 @@ void RGB_to_IR::send_ir_off()
   send_ir_command(0xFF609F,SEND_REPETITIONS);
   m_hwPrint->println("Sending OFF command");
 }
+
+void RGB_to_IR::send_ir_colorIdx(uint8_t idx)
+{
+  send_ir_command(m_codes_list[idx],SEND_REPETITIONS);
+  m_hwPrint->print("Sending IR command on index ");
+  m_hwPrint->println(idx);
+}
